@@ -1,0 +1,82 @@
+﻿@model IEnumerable<Mandarin>
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="row" id="mandarinsContainer">
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <h3>Пока нет мандаринов</h3>
+            <p>Первый появится через минуту!</p>
+        </div>
+    }
+    else
+    {
+        @foreach (var mandarin in Model)
+        {
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
+                <div class="card h-100 shadow">
+                    <img src="@mandarin.ImagePath" class="card-img-top" alt="Мандарин">
+                    <p class="text-center">@mandarin.Id</p>
+        
+                    <div class="card-body">
+                        <div class="text-center mb-2">
+                            <h5 class="current-bid text-warning">
+                                Текущая ставка: @(mandarin.CurrentBid) ₽
+                            </h5>
+                        </div>
+            
+                        <div class="text-muted small text-center mb-3">
+                            <div>Создан: @mandarin.CreatedAt.ToString("dd.MM.yyyy HH:mm")</div>
+                            @if (mandarin.LastBidUser != null)
+                            {
+                                <div>Последняя ставка: @mandarin.LastBidUser.Email</div>
+                            }
+                            else
+                            {
+                                <div>Ставок пока нет</div>
+                            }
+                        </div>
+            
+                        <div class="bid-history mb-3">
+                            <h6 class="small">Последние ставки:</h6>
+                            @if (mandarin.Bids.Any())
+                            {
+                                foreach (var bid in mandarin.Bids.OrderByDescending(b => b.CreatedAt).Take(3))
+                                {
+                                    <div class="bid-item small">
+                                        🍊 @(bid.User?.UserName ?? "Пользователь"): @bid.Amount ₽
+                                        <span class="text-muted float-end">@bid.CreatedAt.ToString("HH:mm")</span>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-muted small text-center">Нет ставок</div>
+                            }
+                        </div>
+            
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <form asp-action="PlaceBid" method="post">
+                                <input type="hidden" name="mandarinId" value="@mandarin.Id" />
+                                <div class="input-group">
+                                    <input type="number" name="amount" class="form-control"
+                                           placeholder="Сумма" step="1" min="@(mandarin.CurrentBid + 1)" required>
+                                    <button type="submit" class="btn btn-warning btn-sm">Ставка 🍊</button>
+                                </div>
+                            </form>
+                        }
+                        else
+                        {
+                            <div class="alert alert-info text-center small mb-0">
+                                <a href="/Account/Login">Войдите</a>, чтобы сделать ставку
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
